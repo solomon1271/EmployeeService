@@ -4,21 +4,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Web.Http;
 
 namespace EmployeeService.Controllers
 {
     public class EmployeesController : ApiController
-    {
-        [HttpGet]
-        public IEnumerable<Employee> AllEmployees()
+    {        
+        [BasicAuthentication]
+        public HttpResponseMessage Get()
         {
+            string username = Thread.CurrentPrincipal.Identity.Name;
             using(EmployeeDBEntities db = new EmployeeDBEntities())
             {
-                return db.Employees.ToList();
+                switch (username.ToLower())
+                {
+                    case "male":
+                        return Request.CreateResponse(HttpStatusCode.OK, db.Employees.
+                            Where(emp => emp.Gender == username).ToList());
+                    case "female":
+                        return Request.CreateResponse(HttpStatusCode.OK, db.Employees.
+                            Where(emp => emp.Gender == username).ToList());
+                    default:
+                        return Request.CreateResponse(HttpStatusCode.BadRequest);
+                }                
             }
         }
         [HttpGet]
+        [BasicAuthentication]
         public HttpResponseMessage EmployeeWithId(int id)
         {
             using (EmployeeDBEntities db = new EmployeeDBEntities())
